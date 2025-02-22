@@ -6,6 +6,8 @@ import isAuthorized from "../../middleware/authoization.middleware.js";
 import { roles } from "../../DB/Models/user.model.js";
 import { validation } from "../../middleware/validation.middleware.js";
 import * as userValidationSchemas from "./user.validation.js";
+import { uploadFileDisk } from "../../utils/multer/local.multer.js";
+import { uploadCloudFile } from "../../utils/multer/cloud.multer.js";
 
 const router = Router();
 
@@ -55,6 +57,21 @@ router.post(
   isAuthorized(roles.user),
   validation(userValidationSchemas.verifyUpdatedEmailSchema),
   asyncHandler(userService.verifyUpdatedEmail)
+);
+// Update User Profile image local
+router.patch(
+  "/profile/image",
+  isAuthenticaded,
+  uploadFileDisk("profile").single("image"),
+  userService.updateProfileImage
+);
+
+// Update User Profile image cloud
+router.patch(
+  "/profile/image/cloud",
+  isAuthenticaded,
+  uploadCloudFile().single("image"),
+  userService.updateProfileImageCloud
 );
 
 export default router;

@@ -6,6 +6,7 @@ import { compareHash, generateHash } from "../../utils/hashing/hash.js";
 import Randomstring from "randomstring";
 import otpModel from "../../DB/Models/otp.model.js";
 import { subjects } from "../../utils/emails/sendEmails.js";
+import { cloud } from "../../utils/multer/cloudinary.multer.js";
 // get Profile
 export const profile = async (req, res, next) => {
   const { user } = req;
@@ -70,6 +71,7 @@ export const deactivateAcccount = async (req, res, next) => {
   return res.status(200).json({ success: true, results: updatedUser });
 };
 
+// Update Email
 export const updateEmail = async (req, res, next) => {
   const { email, password } = req.body;
   const checkEmail = await userModel.findOne({ email, isDeleted: false });
@@ -92,6 +94,7 @@ export const updateEmail = async (req, res, next) => {
   return res.status(200).json({ success: true, message: "Verify your email" });
 };
 
+// Verify Updated Email
 export const verifyUpdatedEmail = async (req, res, next) => {
   const { otp } = req.body;
   const { user } = req;
@@ -107,4 +110,42 @@ export const verifyUpdatedEmail = async (req, res, next) => {
   await otpModel.findByIdAndDelete(checkOTP._id);
 
   return res.status(200).json({ success: true, message: "Email updated" });
+};
+
+// update Profile Image localy
+export const updateProfileImage = async (req, res, next) => {
+  const user = await userModel
+    .findOneAndUpdate(
+      req.user._id,
+      {
+        profileImage: req.file.finalPath,
+      },
+      { new: true, runValidators: true }
+    )
+    .select("-password");
+  return res.status(200).json({ success: true, user });
+};
+
+// update Profile Image Cloud
+export const updateProfileImageCloud = async (req, res, next) => {
+  const { secure_url, public_id } = await cloud.uploader.upload(req.file.path, {
+    folder: `${process.env.app_name}/user/${req.user._id}`,
+  });
+
+  const user = await userModel
+    .findOneAndUpdate(
+      req.user._id,
+      {
+        profileImage: { secure_url, public_id },
+      },
+      // False to update on old data and destroy old image
+      { new: false }
+    )
+    .select("-password");
+  if (user.profileImage?.public_id)
+    await cloud.uploader.destroy(user.profileImage.public_id);
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Profile image updated successfully" });
 };

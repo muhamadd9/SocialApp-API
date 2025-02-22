@@ -51,6 +51,10 @@ const userSchema = new Schema(
       match: [/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, "Invalid email format"],
       lowercase: true,
     },
+    profileImage: {
+      secure_url: String,
+      public_id: String,
+    },
   },
 
   { timestamps: true }

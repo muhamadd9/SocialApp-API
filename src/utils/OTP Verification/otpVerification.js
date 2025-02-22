@@ -1,7 +1,7 @@
 import CustomError from "../errorHandling/customError.js";
 import otpModel from "../../DB/Models/otp.model.js";
 
-export const  OTPVerification = async (email, otp, next, query) => {
+export const OTPVerification = async (email, otp, next, query) => {
   const otpDoc = await otpModel.findOne({ email });
   // check if OTP document exists
   if (!otpDoc) {
